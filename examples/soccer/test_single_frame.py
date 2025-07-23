@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import cv2
 import numpy as np
-from sports.common.enhanced_pass_tracker import EnhancedPassTracker, EnhancedPassAnnotator
+from sports.common.pass_tracker import PassTracker as EnhancedPassTracker, PassAnnotator as EnhancedPassAnnotator
 import supervision as sv
 
 

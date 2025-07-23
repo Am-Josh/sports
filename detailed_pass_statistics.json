@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-07-10T03:23:58.671278",
+  "summary": {
+    "total_passes": 208,
+    "successful_passes": 120,
+    "intercepted_passes": 88,
+    "out_of_bounds_passes": 0,
+    "missed_passes": 0,
+    "success_rate": 57.692307692307686
+  },
+  "player_statistics": {
+    

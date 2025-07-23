@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 import supervision as sv
 from ultralytics import YOLO
-from sports.common.enhanced_pass_tracker import EnhancedPassTracker, EnhancedPassAnnotator
+from sports.common.pass_tracker import PassTracker as EnhancedPassTracker, PassAnnotator as EnhancedPassAnnotator
 
 
 def extract_frame_from_video(video_path, frame_number=0):
