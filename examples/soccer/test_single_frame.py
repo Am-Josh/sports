@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import cv2
 import numpy as np
-from sports.common.pass_tracker import PassTracker as EnhancedPassTracker, PassAnnotator as EnhancedPassAnnotator
+from sports.common.pass_tracker import PassTracker, PassAnnotator
 import supervision as sv
 
 
@@ -54,14 +54,14 @@ def test_enhanced_pass_tracking():
     cv2.imwrite("test_frame_original.jpg", frame)
     print("Original frame saved: test_frame_original.jpg")
     
-    # Initialize enhanced pass tracker
-    tracker = EnhancedPassTracker(
+    # Initialize pass tracker
+    tracker = PassTracker(
         ball_proximity_threshold=50.0,
         pass_distance_threshold=200.0,
         out_of_bounds_timeout=3
     )
     
-    annotator = EnhancedPassAnnotator()
+    annotator = PassAnnotator()
     
     # Create synthetic detections
     print("Creating synthetic detections...")

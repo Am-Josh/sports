@@ -24,8 +24,8 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from sports.common.pass_tracker import (
-    PassTracker as EnhancedPassTracker, 
-    PassAnnotator as EnhancedPassAnnotator, 
+    PassTracker, 
+    PassAnnotator, 
     PassType
 )
 import supervision as sv
@@ -46,13 +46,13 @@ def main():
     print("=" * 50)
     
     # Initialize tracker and annotator
-    tracker = EnhancedPassTracker(
+    tracker = PassTracker(
         ball_proximity_threshold=60.0,
         pass_distance_threshold=300.0,
         min_pass_frames=8,
         out_of_bounds_timeout=20
     )
-    annotator = EnhancedPassAnnotator()
+    annotator = PassAnnotator()
     
     # Initialize models
     print("Loading AI models...")

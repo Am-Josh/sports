@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 import supervision as sv
 from ultralytics import YOLO
-from sports.common.pass_tracker import PassTracker as EnhancedPassTracker, PassAnnotator as EnhancedPassAnnotator
+from sports.common.pass_tracker import PassTracker, PassAnnotator
 
 
 def extract_frame_from_video(video_path, frame_number=0):
@@ -44,9 +44,9 @@ def extract_frame_from_video(video_path, frame_number=0):
     return frame
 
 
-def process_single_frame_with_enhanced_pass_tracking(frame, output_path="processed_frame.jpg"):
+def process_single_frame_with_pass_tracking(frame, output_path="processed_frame.jpg"):
     """Process a single frame with enhanced pass tracking."""
-    print("Processing frame with enhanced pass tracking...")
+    print("Processing frame with pass tracking...")
     
     # Load YOLO models
     PARENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -81,14 +81,14 @@ def process_single_frame_with_enhanced_pass_tracking(frame, output_path="process
         print("No players detected!")
         return None
     
-    # Initialize enhanced pass tracker
-    tracker = EnhancedPassTracker(
+    # Initialize pass tracker
+    tracker = PassTracker(
         ball_proximity_threshold=50.0,
         pass_distance_threshold=200.0,
         out_of_bounds_timeout=3
     )
     
-    annotator = EnhancedPassAnnotator()
+    annotator = PassAnnotator()
     
     # Process the frame
     new_successful_passes, new_unsuccessful_passes, proximity_stats = tracker.process_frame(
@@ -145,7 +145,7 @@ def process_single_frame_with_enhanced_pass_tracking(frame, output_path="process
     
     # Display the frame
     print("Displaying frame (press any key to close)...")
-    cv2.imshow("Enhanced Pass Tracking - Single Frame", annotated_frame)
+    cv2.imshow("Pass Tracking - Single Frame", annotated_frame)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     
@@ -155,7 +155,7 @@ def process_single_frame_with_enhanced_pass_tracking(frame, output_path="process
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description='Extract and process a single frame with enhanced pass tracking')
+    parser = argparse.ArgumentParser(description='Extract and process a single frame with pass tracking')
     parser.add_argument('--video', type=str, required=True, help='Path to input video')
     parser.add_argument('--frame', type=int, default=0, help='Frame number to extract (default: 0)')
     parser.add_argument('--output', type=str, default='processed_frame.jpg', help='Output image path')
@@ -175,7 +175,7 @@ def main():
         return
     
     # Process frame
-    annotated_frame = process_single_frame_with_enhanced_pass_tracking(frame, args.output)
+    annotated_frame = process_single_frame_with_pass_tracking(frame, args.output)
     
     if annotated_frame is not None:
         print("Frame processing completed successfully!")
