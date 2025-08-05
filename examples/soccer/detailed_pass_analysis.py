@@ -55,7 +55,7 @@ def main():
     annotator = PassAnnotator()
     
     # Initialize models
-    print("Loading AI models...")
+    print("Loading the Ai sys.")
     player_detection_model = YOLO(PLAYER_DETECTION_MODEL_PATH)
     ball_detection_model = YOLO(BALL_DETECTION_MODEL_PATH)
     
