@@ -153,9 +153,14 @@ class PassTracker:
     def update_ball_position(self, ball_detections: sv.Detections):
         """Update the current ball position."""
         if len(ball_detections) > 0:
-            ball_center = ball_detections.get_anchors_coordinates(sv.Position.CENTER)
-            if len(ball_center) > 0:
-                self.current_ball_position = ball_center[0]
+            # Calculate center coordinates manually for supervision 0.16.0
+            boxes = ball_detections.xyxy
+            if len(boxes) > 0:
+                # Calculate center of the first ball detection
+                x1, y1, x2, y2 = boxes[0]
+                center_x = (x1 + x2) / 2
+                center_y = (y1 + y2) / 2
+                self.current_ball_position = np.array([center_x, center_y])
                 self.ball_history.append(self.current_ball_position.copy())
                 self.ball_lost_frames = 0
         else:
@@ -170,7 +175,16 @@ class PassTracker:
         if len(player_detections) == 0:
             return
         
-        player_positions = player_detections.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
+        # Calculate bottom center coordinates manually for supervision 0.16.0
+        boxes = player_detections.xyxy
+        player_positions = []
+        for box in boxes:
+            x1, y1, x2, y2 = box
+            # Bottom center of the bounding box
+            center_x = (x1 + x2) / 2
+            bottom_y = y2  # Bottom of the box
+            player_positions.append(np.array([center_x, bottom_y]))
+        player_positions = np.array(player_positions)
         
         if player_ids is None:
             player_ids = np.arange(len(player_detections))

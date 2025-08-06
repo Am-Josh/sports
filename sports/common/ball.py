@@ -49,7 +49,16 @@ class BallAnnotator:
         Returns:
             np.ndarray: The annotated frame.
         """
-        xy = detections.get_anchors_coordinates(sv.Position.BOTTOM_CENTER).astype(int)
+        # Calculate bottom center coordinates manually for supervision 0.16.0
+        boxes = detections.xyxy
+        xy = []
+        for box in boxes:
+            x1, y1, x2, y2 = box
+            # Bottom center of the bounding box
+            center_x = (x1 + x2) / 2
+            bottom_y = y2  # Bottom of the box
+            xy.append([center_x, bottom_y])
+        xy = np.array(xy).astype(int)
         self.buffer.append(xy)
         for i, xy in enumerate(self.buffer):
             color = self.color_palette.by_idx(i)
@@ -91,7 +100,16 @@ class BallTracker:
             sv.Detections: The detection closest to the centroid of recent positions.
             If there are no detections, returns the input detections.
         """
-        xy = detections.get_anchors_coordinates(sv.Position.CENTER)
+        # Calculate center coordinates manually for supervision 0.16.0
+        boxes = detections.xyxy
+        xy = []
+        for box in boxes:
+            x1, y1, x2, y2 = box
+            # Center of the bounding box
+            center_x = (x1 + x2) / 2
+            center_y = (y1 + y2) / 2
+            xy.append([center_x, center_y])
+        xy = np.array(xy)
         self.buffer.append(xy)
 
         if len(detections) == 0:

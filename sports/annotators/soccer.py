@@ -10,7 +10,7 @@ from sports.configs.soccer import SoccerPitchConfiguration
 def draw_pitch(
     config: SoccerPitchConfiguration,
     background_color: sv.Color = sv.Color(34, 139, 34),
-    line_color: sv.Color = sv.Color.WHITE,
+    line_color: sv.Color = sv.Color(255, 255, 255),  # White color
     padding: int = 50,
     line_thickness: int = 4,
     point_radius: int = 8,
@@ -99,8 +99,8 @@ def draw_pitch(
 def draw_points_on_pitch(
     config: SoccerPitchConfiguration,
     xy: np.ndarray,
-    face_color: sv.Color = sv.Color.RED,
-    edge_color: sv.Color = sv.Color.BLACK,
+    face_color: sv.Color = sv.Color(255, 0, 0),  # Red color
+    edge_color: sv.Color = sv.Color(0, 0, 0),  # Black color
     radius: int = 10,
     thickness: int = 2,
     padding: int = 50,
@@ -166,7 +166,7 @@ def draw_points_on_pitch(
 def draw_paths_on_pitch(
     config: SoccerPitchConfiguration,
     paths: List[np.ndarray],
-    color: sv.Color = sv.Color.WHITE,
+    color: sv.Color = sv.Color(255, 255, 255),  # White color
     thickness: int = 2,
     padding: int = 50,
     scale: float = 0.1,
@@ -229,8 +229,8 @@ def draw_pitch_voronoi_diagram(
     config: SoccerPitchConfiguration,
     team_1_xy: np.ndarray,
     team_2_xy: np.ndarray,
-    team_1_color: sv.Color = sv.Color.RED,
-    team_2_color: sv.Color = sv.Color.WHITE,
+    team_1_color: sv.Color = sv.Color(255, 0, 0),  # Red color
+    team_2_color: sv.Color = sv.Color(255, 255, 255),  # White color
     opacity: float = 0.5,
     padding: int = 50,
     scale: float = 0.1,

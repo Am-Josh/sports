@@ -25,28 +25,21 @@ GOALKEEPER_CLASS_ID = 1
 PLAYER_CLASS_ID = 2
 REFEREE_CLASS_ID = 3
 
+# Class labels mapping
+CLASS_LABELS = {
+    BALL_CLASS_ID: "Ball",
+    GOALKEEPER_CLASS_ID: "Goalkeeper", 
+    PLAYER_CLASS_ID: "Player",
+    REFEREE_CLASS_ID: "Referee"
+}
+
 STRIDE = 60
 CONFIG = SoccerPitchConfiguration()
 
 COLORS = ['#FF1493', '#00BFFF', '#FF6347', '#FFD700']
-VERTEX_LABEL_ANNOTATOR = sv.VertexLabelAnnotator(
-    color=[sv.Color.from_hex(color) for color in CONFIG.colors],
-    text_color=sv.Color.from_hex('#FFFFFF'),
-    border_radius=5,
-    text_thickness=1,
-    text_scale=0.5,
-    text_padding=5,
-)
-EDGE_ANNOTATOR = sv.EdgeAnnotator(
-    color=sv.Color.from_hex('#FF1493'),
-    thickness=2,
-    edges=CONFIG.edges,
-)
-TRIANGLE_ANNOTATOR = sv.TriangleAnnotator(
-    color=sv.Color.from_hex('#FF1493'),
-    base=20,
-    height=15,
-)
+# VERTEX_LABEL_ANNOTATOR removed - not available in current supervision version
+# EDGE_ANNOTATOR removed - not available in current supervision version
+# TRIANGLE_ANNOTATOR removed - not available in current supervision version
 BOX_ANNOTATOR = sv.BoxAnnotator(
     color=sv.ColorPalette.from_hex(COLORS),
     thickness=2
@@ -96,6 +89,22 @@ def get_crops(frame: np.ndarray, detections: sv.Detections) -> List[np.ndarray]:
     return [sv.crop_image(frame, xyxy) for xyxy in detections.xyxy]
 
 
+def get_class_labels(detections: sv.Detections) -> List[str]:
+    """
+    Convert class IDs to human-readable labels.
+
+    Args:
+        detections (sv.Detections): Detections with class IDs.
+
+    Returns:
+        List[str]: List of human-readable labels.
+    """
+    labels = []
+    for class_id in detections.class_id:
+        labels.append(CLASS_LABELS.get(int(class_id), f"Unknown-{class_id}"))
+    return labels
+
+
 def resolve_goalkeepers_team_id(
     players: sv.Detections,
     players_team_id: np.array,
@@ -117,8 +126,24 @@ def resolve_goalkeepers_team_id(
     the players. Then, it assigns each goalkeeper to the nearest team's centroid by
     calculating the distance between each goalkeeper and the centroids of the two teams.
     """
-    goalkeepers_xy = goalkeepers.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
-    players_xy = players.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
+    # Calculate bottom center coordinates manually for supervision 0.16.0
+    goalkeepers_boxes = goalkeepers.xyxy
+    goalkeepers_xy = []
+    for box in goalkeepers_boxes:
+        x1, y1, x2, y2 = box
+        center_x = (x1 + x2) / 2
+        bottom_y = y2
+        goalkeepers_xy.append([center_x, bottom_y])
+    goalkeepers_xy = np.array(goalkeepers_xy)
+    
+    players_boxes = players.xyxy
+    players_xy = []
+    for box in players_boxes:
+        x1, y1, x2, y2 = box
+        center_x = (x1 + x2) / 2
+        bottom_y = y2
+        players_xy.append([center_x, bottom_y])
+    players_xy = np.array(players_xy)
     team_0_centroid = players_xy[players_team_id == 0].mean(axis=0)
     team_1_centroid = players_xy[players_team_id == 1].mean(axis=0)
     goalkeepers_team_id = []
@@ -131,29 +156,31 @@ def resolve_goalkeepers_team_id(
 
 def render_radar(
     detections: sv.Detections,
-    keypoints: sv.KeyPoints,
     color_lookup: np.ndarray
 ) -> np.ndarray:
-    mask = (keypoints.xy[0][:, 0] > 1) & (keypoints.xy[0][:, 1] > 1)
-    transformer = ViewTransformer(
-        source=keypoints.xy[0][mask].astype(np.float32),
-        target=np.array(CONFIG.vertices)[mask].astype(np.float32)
-    )
-    xy = detections.get_anchors_coordinates(anchor=sv.Position.BOTTOM_CENTER)
-    transformed_xy = transformer.transform_points(points=xy)
-
+    # Simplified radar without keypoints since KeyPoints is not available
+    # Calculate bottom center coordinates manually for supervision 0.16.0
+    boxes = detections.xyxy
+    xy = []
+    for box in boxes:
+        x1, y1, x2, y2 = box
+        center_x = (x1 + x2) / 2
+        bottom_y = y2
+        xy.append([center_x, bottom_y])
+    xy = np.array(xy)
+    
     radar = draw_pitch(config=CONFIG)
     radar = draw_points_on_pitch(
-        config=CONFIG, xy=transformed_xy[color_lookup == 0],
+        config=CONFIG, xy=xy[color_lookup == 0],
         face_color=sv.Color.from_hex(COLORS[0]), radius=20, pitch=radar)
     radar = draw_points_on_pitch(
-        config=CONFIG, xy=transformed_xy[color_lookup == 1],
+        config=CONFIG, xy=xy[color_lookup == 1],
         face_color=sv.Color.from_hex(COLORS[1]), radius=20, pitch=radar)
     radar = draw_points_on_pitch(
-        config=CONFIG, xy=transformed_xy[color_lookup == 2],
+        config=CONFIG, xy=xy[color_lookup == 2],
         face_color=sv.Color.from_hex(COLORS[2]), radius=20, pitch=radar)
     radar = draw_points_on_pitch(
-        config=CONFIG, xy=transformed_xy[color_lookup == 3],
+        config=CONFIG, xy=xy[color_lookup == 3],
         face_color=sv.Color.from_hex(COLORS[3]), radius=20, pitch=radar)
     return radar
 
@@ -173,11 +200,8 @@ def run_pitch_detection(source_video_path: str, device: str) -> Iterator[np.ndar
     frame_generator = sv.get_video_frames_generator(source_path=source_video_path)
     for frame in frame_generator:
         result = pitch_detection_model(frame, verbose=False)[0]
-        keypoints = sv.KeyPoints.from_ultralytics(result)
-
+        # Skip keypoints processing since KeyPoints is not available in this supervision version
         annotated_frame = frame.copy()
-        annotated_frame = VERTEX_LABEL_ANNOTATOR.annotate(
-            annotated_frame, keypoints, CONFIG.labels)
         yield annotated_frame
 
 
@@ -199,8 +223,9 @@ def run_player_detection(source_video_path: str, device: str) -> Iterator[np.nda
         detections = sv.Detections.from_ultralytics(result)
 
         annotated_frame = frame.copy()
+        labels = get_class_labels(detections)
         annotated_frame = BOX_ANNOTATOR.annotate(annotated_frame, detections)
-        annotated_frame = BOX_LABEL_ANNOTATOR.annotate(annotated_frame, detections)
+        annotated_frame = BOX_LABEL_ANNOTATOR.annotate(annotated_frame, detections, labels=labels)
         yield annotated_frame
 
 
@@ -251,18 +276,19 @@ def run_player_tracking(source_video_path: str, device: str) -> Iterator[np.ndar
     """
     player_detection_model = YOLO(PLAYER_DETECTION_MODEL_PATH).to(device=device)
     frame_generator = sv.get_video_frames_generator(source_path=source_video_path)
-    tracker = sv.ByteTrack(minimum_consecutive_frames=3)
+    tracker = sv.ByteTrack()
     for frame in frame_generator:
         result = player_detection_model(frame, imgsz=1280, verbose=False)[0]
         detections = sv.Detections.from_ultralytics(result)
         detections = tracker.update_with_detections(detections)
 
-        labels = [str(tracker_id) for tracker_id in detections.tracker_id]
+        class_labels = get_class_labels(detections)
+        tracker_labels = [f"{class_labels[i]} #{tracker_id}" for i, tracker_id in enumerate(detections.tracker_id)]
 
         annotated_frame = frame.copy()
         annotated_frame = ELLIPSE_ANNOTATOR.annotate(annotated_frame, detections)
         annotated_frame = ELLIPSE_LABEL_ANNOTATOR.annotate(
-            annotated_frame, detections, labels=labels)
+            annotated_frame, detections, labels=tracker_labels)
         yield annotated_frame
 
 
@@ -291,7 +317,7 @@ def run_team_classification(source_video_path: str, device: str) -> Iterator[np.
     team_classifier.fit(crops)
 
     frame_generator = sv.get_video_frames_generator(source_path=source_video_path)
-    tracker = sv.ByteTrack(minimum_consecutive_frames=3)
+    tracker = sv.ByteTrack()
     for frame in frame_generator:
         result = player_detection_model(frame, imgsz=1280, verbose=False)[0]
         detections = sv.Detections.from_ultralytics(result)
@@ -313,13 +339,14 @@ def run_team_classification(source_video_path: str, device: str) -> Iterator[np.
                 goalkeepers_team_id.tolist() +
                 [REFEREE_CLASS_ID] * len(referees)
         )
-        labels = [str(tracker_id) for tracker_id in detections.tracker_id]
+        class_labels = get_class_labels(detections)
+        tracker_labels = [f"{class_labels[i]} #{tracker_id}" for i, tracker_id in enumerate(detections.tracker_id)]
 
         annotated_frame = frame.copy()
         annotated_frame = ELLIPSE_ANNOTATOR.annotate(
             annotated_frame, detections, custom_color_lookup=color_lookup)
         annotated_frame = ELLIPSE_LABEL_ANNOTATOR.annotate(
-            annotated_frame, detections, labels, custom_color_lookup=color_lookup)
+            annotated_frame, detections, tracker_labels, custom_color_lookup=color_lookup)
         yield annotated_frame
 
 
@@ -339,10 +366,10 @@ def run_radar(source_video_path: str, device: str) -> Iterator[np.ndarray]:
     team_classifier.fit(crops)
 
     frame_generator = sv.get_video_frames_generator(source_path=source_video_path)
-    tracker = sv.ByteTrack(minimum_consecutive_frames=3)
+    tracker = sv.ByteTrack()
     for frame in frame_generator:
         result = pitch_detection_model(frame, verbose=False)[0]
-        keypoints = sv.KeyPoints.from_ultralytics(result)
+        # Skip keypoints processing since KeyPoints is not available in this supervision version
         result = player_detection_model(frame, imgsz=1280, verbose=False)[0]
         detections = sv.Detections.from_ultralytics(result)
         detections = tracker.update_with_detections(detections)
@@ -363,17 +390,18 @@ def run_radar(source_video_path: str, device: str) -> Iterator[np.ndarray]:
             goalkeepers_team_id.tolist() +
             [REFEREE_CLASS_ID] * len(referees)
         )
-        labels = [str(tracker_id) for tracker_id in detections.tracker_id]
+        class_labels = get_class_labels(detections)
+        tracker_labels = [f"{class_labels[i]} #{tracker_id}" for i, tracker_id in enumerate(detections.tracker_id)]
 
         annotated_frame = frame.copy()
         annotated_frame = ELLIPSE_ANNOTATOR.annotate(
             annotated_frame, detections, custom_color_lookup=color_lookup)
         annotated_frame = ELLIPSE_LABEL_ANNOTATOR.annotate(
-            annotated_frame, detections, labels,
+            annotated_frame, detections, tracker_labels,
             custom_color_lookup=color_lookup)
 
         h, w, _ = frame.shape
-        radar = render_radar(detections, keypoints, color_lookup)
+        radar = render_radar(detections, color_lookup)
         radar = sv.resize_image(radar, (w // 2, h // 2))
         radar_h, radar_w, _ = radar.shape
         rect = sv.Rect(
@@ -420,10 +448,13 @@ def main(source_video_path: str, target_video_path: str, device: str, mode: Mode
 
 
 if __name__ == '__main__':
+    # Get the directory where this script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--source_video_path', type=str, required=True)
-    parser.add_argument('--target_video_path', type=str, required=True)
-    parser.add_argument('--device', type=str, default='cpu')
+    parser.add_argument('--source_video_path', type=str, default=os.path.join(script_dir, 'data/2e57b9_0.mp4'))
+    parser.add_argument('--target_video_path', type=str, default=os.path.join(script_dir, 'data/2e57b9_0-labeled-analysis.mp4'))
+    parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--mode', type=Mode, default=Mode.PLAYER_DETECTION)
     args = parser.parse_args()
     main(

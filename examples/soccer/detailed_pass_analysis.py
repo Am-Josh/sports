@@ -17,6 +17,7 @@ from tqdm import tqdm
 from ultralytics import YOLO
 import json
 from datetime import datetime
+import torch
 
 # Add the project root to Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -55,9 +56,12 @@ def main():
     annotator = PassAnnotator()
     
     # Initialize models
-    print("Loading the Ai sys.")
-    player_detection_model = YOLO(PLAYER_DETECTION_MODEL_PATH)
-    ball_detection_model = YOLO(BALL_DETECTION_MODEL_PATH)
+    print("Loading the AI system...")
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f"Using device: {device}")
+    
+    player_detection_model = YOLO(PLAYER_DETECTION_MODEL_PATH).to(device=device)
+    ball_detection_model = YOLO(BALL_DETECTION_MODEL_PATH).to(device=device)
     
     # Video paths
     source_video_path = os.path.join(PARENT_DIR, "data/2e57b9_0.mp4")
@@ -187,7 +191,7 @@ def main():
                 show_distance=True
             )
             
-            # Add comprehensive statistics overlay
+            # Add comprehensive statistics
             success_rate = (successful_passes / max(total_passes, 1) * 100)
             stats_text = [
                 f"Frame: {frame_num}/{frame_count}",
