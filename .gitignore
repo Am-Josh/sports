@@ -59,10 +59,3 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Thesis and documentation files (keep local only)
-*Thesis*.docx
-*Dissertation*.docx
-thesis_*.html
-thesis_*.md
-*_word_*.md
-*_word_*.html
