@@ -168,7 +168,7 @@ def render_radar(
         bottom_y = y2
         xy.append([center_x, bottom_y])
     xy = np.array(xy)
-    
+
     radar = draw_pitch(config=CONFIG)
     radar = draw_points_on_pitch(
         config=CONFIG, xy=xy[color_lookup == 0],

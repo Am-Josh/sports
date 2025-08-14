@@ -108,11 +108,11 @@ class PassTracker:
             self.track_unsuccessful_passes = False
         else:
             # Advanced settings for comprehensive analysis
-            self.ball_proximity_threshold = ball_proximity_threshold
-            self.pass_distance_threshold = pass_distance_threshold
-            self.min_pass_frames = min_pass_frames
-            self.max_player_history = max_player_history
-            self.out_of_bounds_timeout = out_of_bounds_timeout
+        self.ball_proximity_threshold = ball_proximity_threshold
+        self.pass_distance_threshold = pass_distance_threshold
+        self.min_pass_frames = min_pass_frames
+        self.max_player_history = max_player_history
+        self.out_of_bounds_timeout = out_of_bounds_timeout
             self.track_unsuccessful_passes = True
         
         # Player tracking
@@ -137,11 +137,11 @@ class PassTracker:
         self.fps = 30.0
         
         print(f"PassTracker initialized in '{self.mode}' mode")
-    
+        
     def update_fps(self, fps: float):
         """Update the FPS for timestamp calculations."""
         self.fps = fps
-    
+        
     def _calculate_distance(self, pos1: np.ndarray, pos2: np.ndarray) -> float:
         """Calculate Euclidean distance between two positions."""
         return np.linalg.norm(pos1 - pos2)
@@ -174,7 +174,7 @@ class PassTracker:
         """Update player positions and states."""
         if len(player_detections) == 0:
             return
-        
+            
         # Calculate bottom center coordinates manually for supervision 0.16.0
         boxes = player_detections.xyxy
         player_positions = []
@@ -409,9 +409,9 @@ class PassTracker:
             # Advanced mode - all pass types
             new_attempts = self._detect_pass_attempts_advanced()
             self._resolve_pass_attempts_advanced(new_attempts)
-            new_successful_passes = [p for p in self.passes if p.frame_number == self.frame_number]
-            new_unsuccessful_passes = [p for p in self.unsuccessful_passes if p.frame_number == self.frame_number]
-            return new_successful_passes, new_unsuccessful_passes
+        new_successful_passes = [p for p in self.passes if p.frame_number == self.frame_number]
+        new_unsuccessful_passes = [p for p in self.unsuccessful_passes if p.frame_number == self.frame_number]
+        return new_successful_passes, new_unsuccessful_passes
     
     def get_ball_proximity_stats(self) -> Dict[int, Dict]:
         """Get statistics about ball proximity for each player."""
@@ -721,8 +721,8 @@ class PassAnnotator:
                            tuple(pass_record.passer_position.astype(int) + [10, -10]),
                            cv2.FONT_HERSHEY_SIMPLEX,
                            0.4,
-                           self.text_color,
-                           1)
+                       self.text_color,
+                       1)
         
         return annotated_frame
     
